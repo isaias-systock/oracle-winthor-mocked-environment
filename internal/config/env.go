@@ -8,26 +8,38 @@ import (
 )
 
 type Config struct {
-	DBUser     string
-	DBPassword string
-	DBHost     string
-	DBPort     string
-	DBService  string
+	AppEnv string
+
+	OracleHost    string
+	OraclePort    string
+	OracleService string
+
+	OracleAdminUser     string
+	OracleAdminPassword string
+
+	OracleAppUser     string
+	OracleAppPassword string
 }
 
-func LoadConfig() Config {
+func Load() Config {
 	_ = godotenv.Load()
 
 	cfg := Config{
-		DBUser:     os.Getenv("DB_USER"),
-		DBPassword: os.Getenv("DB_PASSWORD"),
-		DBHost:     os.Getenv("DB_HOST"),
-		DBPort:     os.Getenv("DB_PORT"),
-		DBService:  os.Getenv("DB_SERVICE"),
+		AppEnv: os.Getenv("APP_ENV"),
+
+		OracleHost:    os.Getenv("ORACLE_HOST"),
+		OraclePort:    os.Getenv("ORACLE_PORT"),
+		OracleService: os.Getenv("ORACLE_SERVICE"),
+
+		OracleAdminUser:     os.Getenv("ORACLE_ADMIN_USER"),
+		OracleAdminPassword: os.Getenv("ORACLE_ADMIN_PASSWORD"),
+
+		OracleAppUser:     os.Getenv("ORACLE_APP_USER"),
+		OracleAppPassword: os.Getenv("ORACLE_APP_PASSWORD"),
 	}
 
-	if cfg.DBUser == "" || cfg.DBPassword == "" || cfg.DBHost == "" || cfg.DBPort == "" || cfg.DBService == "" {
-		log.Fatal("variáveis de ambiente do banco não configuradas corretamente")
+	if cfg.OracleHost == "" || cfg.OraclePort == "" || cfg.OracleService == "" {
+		log.Fatal("ORACLE_HOST, ORACLE_PORT e ORACLE_SERVICE são obrigatórios")
 	}
 
 	return cfg

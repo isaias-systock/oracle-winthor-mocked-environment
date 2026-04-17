@@ -9,25 +9,38 @@ import (
 	_ "github.com/sijms/go-ora/v2"
 )
 
-func Open(cfg config.Config) (*sql.DB, error) {
-	dsn := fmt.Sprintf(
-		"oracle://%s:%s@%s:%s/%s",
-		cfg.DBUser,
-		cfg.DBPassword,
-		cfg.DBHost,
-		cfg.DBPort,
-		cfg.DBService,
-	)
+func open(user, password, host, port, service string) (*sql.DB, error) {
+	dsn := fmt.Sprintf("oracle://%s:%s@%s:%s/%s", user, password, host, port, service)
 
-	db, err := sql.Open("oracle", dsn)
+	conn, err := sql.Open("oracle", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
-		db.Close()
+	if err := conn.Ping(); err != nil {
+		_ = conn.Close()
 		return nil, err
 	}
 
-	return db, nil
+	return conn, nil
+}
+
+func OpenAdmin(cfg config.Config) (*sql.DB, error) {
+	return open(
+		cfg.OracleAdminUser,
+		cfg.OracleAdminPassword,
+		cfg.OracleHost,
+		cfg.OraclePort,
+		cfg.OracleService,
+	)
+}
+
+func OpenApp(cfg config.Config) (*sql.DB, error) {
+	return open(
+		cfg.OracleAppUser,
+		cfg.OracleAppPassword,
+		cfg.OracleHost,
+		cfg.OraclePort,
+		cfg.OracleService,
+	)
 }
