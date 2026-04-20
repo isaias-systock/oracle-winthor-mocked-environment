@@ -42,6 +42,11 @@ func main() {
 			log.Fatal(err)
 		}
 
+	case "seed":
+		if err := migration.Seed(cfg); err != nil {
+			log.Fatal(err)
+		}
+
 	case "down":
 		if err := migration.Down(cfg); err != nil {
 			log.Fatal(err)
@@ -58,5 +63,6 @@ func printUsage() {
 	fmt.Println("  go run ./cmd/migrate create <nome>")
 	fmt.Println("  go run ./cmd/migrate create-seed <nome>")
 	fmt.Println("  go run ./cmd/migrate up")
+	fmt.Println("  go run ./cmd/migrate seed")
 	fmt.Println("  go run ./cmd/migrate down")
 }
