@@ -21,6 +21,7 @@ Na prática, ele centraliza:
 Hoje, o fluxo foi simplificado para um modelo pragmático:
 
 - o comando `up` lê os arquivos `.sql` em ordem de nome;
+- o comando `seed` executa apenas os arquivos da pasta `seeds/`;
 - o SQL de cada arquivo é executado diretamente no Oracle;
 - a execução acontece sempre com o usuário admin configurado no `.env`;
 - o usuário `WINTHOR` é tratado como schema alvo dos objetos, não como usuário de execução das migrations.
@@ -45,6 +46,12 @@ Comportamento atual do `down`:
 - ainda depende de uma tabela de controle `WINTHOR.MIGRATIONS` para identificar a última migration aplicada;
 - abre a conexão com o usuário admin;
 - executa o `down.sql` correspondente à última versão registrada.
+
+Comportamento atual do `seed`:
+
+- carrega apenas os arquivos da pasta `seeds/`;
+- abre a conexão Oracle com o usuário admin;
+- executa as seeds em ordem lexical.
 
 Importante:
 
@@ -84,6 +91,7 @@ Comandos disponíveis:
 go run ./cmd/migrate create <nome>
 go run ./cmd/migrate create-seed <nome>
 go run ./cmd/migrate up
+go run ./cmd/migrate seed
 go run ./cmd/migrate down
 ```
 
@@ -286,6 +294,12 @@ Para criar uma seed:
 
 ```bash
 go run ./cmd/migrate create-seed carga_inicial
+```
+
+Para executar apenas as seeds:
+
+```bash
+go run ./cmd/migrate seed
 ```
 
 ## Convenções das migrations

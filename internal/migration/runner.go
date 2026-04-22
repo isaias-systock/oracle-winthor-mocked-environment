@@ -635,6 +635,31 @@ func Up(cfg config.Config) error {
 	return nil
 }
 
+func Seed(cfg config.Config) error {
+	seeds, err := LoadSeeds("seeds")
+	if err != nil {
+		return err
+	}
+
+	if len(seeds) == 0 {
+		fmt.Println("nenhuma seed encontrada")
+		return nil
+	}
+
+	adminConn, err := db.OpenAdmin(cfg)
+	if err != nil {
+		return fmt.Errorf("falha ao abrir conexão admin para seeds: %w", err)
+	}
+	defer adminConn.Close()
+
+	if err := applySeedsStateless(adminConn, seeds); err != nil {
+		return err
+	}
+
+	fmt.Println("seeds aplicadas com sucesso!")
+	return nil
+}
+
 func Down(cfg config.Config) error {
 	migrations, err := LoadMigrations("migrations")
 	if err != nil {

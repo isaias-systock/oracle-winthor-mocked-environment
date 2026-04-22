@@ -1,0 +1,453 @@
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCCOB t
+    USING (
+      SELECT
+        'C' || LPAD(i, 3, '0') AS CODCOB,
+        'COBRANCA AVANCADA ' || LPAD(i, 2, '0') AS COBRANCA,
+        'S' AS PAGCOMISSAO,
+        ROUND(1 + MOD(i, 7), 2) AS TXJUROS,
+        20 + MOD(i, 40) AS PRAZOMAXIMOVENDA,
+        'L' || LPAD(MOD(i, 9), 1, '0') AS LETRACOB,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'S'
+          ELSE 'N'
+        END AS BOLETO,
+        'S' AS ENVIACOBRANCAFV
+      FROM dual
+    ) s
+    ON (t.CODCOB = s.CODCOB)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.COBRANCA = s.COBRANCA,
+        t.PAGCOMISSAO = s.PAGCOMISSAO,
+        t.TXJUROS = s.TXJUROS,
+        t.PRAZOMAXIMOVENDA = s.PRAZOMAXIMOVENDA,
+        t.LETRACOB = s.LETRACOB,
+        t.BOLETO = s.BOLETO,
+        t.ENVIACOBRANCAFV = s.ENVIACOBRANCAFV
+    WHEN NOT MATCHED THEN
+      INSERT (CODCOB, COBRANCA, PAGCOMISSAO, TXJUROS, PRAZOMAXIMOVENDA, LETRACOB, BOLETO, ENVIACOBRANCAFV)
+      VALUES (s.CODCOB, s.COBRANCA, s.PAGCOMISSAO, s.TXJUROS, s.PRAZOMAXIMOVENDA, s.LETRACOB, s.BOLETO, s.ENVIACOBRANCAFV);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCPLPAG t
+    USING (
+      SELECT
+        100 + i AS CODPLPAG,
+        'PLANO AVANCADO ' || LPAD(i, 2, '0') AS DESCRICAO,
+        14 + MOD(i, 60) AS NUMDIAS,
+        'P' AS TIPOPRAZO,
+        14 + MOD(i, 60) AS PRAZO1,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'VD'
+          ELSE 'VC'
+        END AS TIPOVENDA,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'N'
+          ELSE 'S'
+        END AS OFERTA,
+        'S' AS VENDABK,
+        'C' || LPAD(i, 3, '0') AS CODCOB,
+        'S' AS STATUS
+      FROM dual
+    ) s
+    ON (t.CODPLPAG = s.CODPLPAG)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.DESCRICAO = s.DESCRICAO,
+        t.NUMDIAS = s.NUMDIAS,
+        t.TIPOPRAZO = s.TIPOPRAZO,
+        t.PRAZO1 = s.PRAZO1,
+        t.TIPOVENDA = s.TIPOVENDA,
+        t.OFERTA = s.OFERTA,
+        t.VENDABK = s.VENDABK,
+        t.CODCOB = s.CODCOB,
+        t.STATUS = s.STATUS
+    WHEN NOT MATCHED THEN
+      INSERT (CODPLPAG, DESCRICAO, NUMDIAS, TIPOPRAZO, PRAZO1, TIPOVENDA, OFERTA, VENDABK, CODCOB, STATUS)
+      VALUES (s.CODPLPAG, s.DESCRICAO, s.NUMDIAS, s.TIPOPRAZO, s.PRAZO1, s.TIPOVENDA, s.OFERTA, s.VENDABK, s.CODCOB, s.STATUS);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 11..15 LOOP
+    MERGE INTO WINTHOR.PCFILIAL t
+    USING (
+      SELECT
+        LPAD(i, 2, '0') AS CODIGO,
+        'FILIAL AVANCADA ' || LPAD(i, 2, '0') AS RAZAOSOCIAL,
+        'AVENIDA FILIAL ' || LPAD(i, 2, '0') AS ENDERECO,
+        'CIDADE FILIAL ' || LPAD(i - 10, 2, '0') AS CIDADE,
+        CASE MOD(i, 5)
+          WHEN 0 THEN 'SP'
+          WHEN 1 THEN 'RJ'
+          WHEN 2 THEN 'MG'
+          WHEN 3 THEN 'PR'
+          ELSE 'GO'
+        END AS UF,
+        LPAD(14000000 + i, 8, '0') AS CEP,
+        '113300' || LPAD(i, 4, '0') AS TELEFONE,
+        LPAD(77000000000000 + i, 14, '0') AS CGC,
+        3000 + (i - 10) AS CODCLI,
+        2000 + (i - 10) AS CODFORNEC,
+        10000 + i AS PROXNUMNOTA,
+        20000 + i AS NUMPROXVEND,
+        'N' AS INDUSTRIA,
+        'FILIAL ' || LPAD(i, 2, '0') AS FANTASIA,
+        3000 + (i - 10) AS CODCLICONSUMIDOR
+      FROM dual
+    ) s
+    ON (t.CODIGO = s.CODIGO)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.RAZAOSOCIAL = s.RAZAOSOCIAL,
+        t.ENDERECO = s.ENDERECO,
+        t.CIDADE = s.CIDADE,
+        t.UF = s.UF,
+        t.CEP = s.CEP,
+        t.TELEFONE = s.TELEFONE,
+        t.CGC = s.CGC,
+        t.CODCLI = s.CODCLI,
+        t.CODFORNEC = s.CODFORNEC,
+        t.PROXNUMNOTA = s.PROXNUMNOTA,
+        t.NUMPROXVEND = s.NUMPROXVEND,
+        t.INDUSTRIA = s.INDUSTRIA,
+        t.FANTASIA = s.FANTASIA,
+        t.CODCLICONSUMIDOR = s.CODCLICONSUMIDOR
+    WHEN NOT MATCHED THEN
+      INSERT (
+        CODIGO, RAZAOSOCIAL, ENDERECO, CIDADE, UF, CEP, TELEFONE, CGC,
+        CODCLI, CODFORNEC, PROXNUMNOTA, NUMPROXVEND, INDUSTRIA, FANTASIA, CODCLICONSUMIDOR
+      )
+      VALUES (
+        s.CODIGO, s.RAZAOSOCIAL, s.ENDERECO, s.CIDADE, s.UF, s.CEP, s.TELEFONE, s.CGC,
+        s.CODCLI, s.CODFORNEC, s.PROXNUMNOTA, s.NUMPROXVEND, s.INDUSTRIA, s.FANTASIA, s.CODCLICONSUMIDOR
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCDEPTO t
+    USING (
+      SELECT
+        200 + i AS CODEPTO,
+        'SEGMENTO AVANCADO ' || LPAD(i, 2, '0') AS DESCRICAO
+      FROM dual
+    ) s
+    ON (t.CODEPTO = s.CODEPTO)
+    WHEN MATCHED THEN
+      UPDATE SET t.DESCRICAO = s.DESCRICAO
+    WHEN NOT MATCHED THEN
+      INSERT (CODEPTO, DESCRICAO)
+      VALUES (s.CODEPTO, s.DESCRICAO);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCSECAO t
+    USING (
+      SELECT
+        300 + i AS CODSEC,
+        'SECAO AVANCADA ' || LPAD(i, 2, '0') AS DESCRICAO
+      FROM dual
+    ) s
+    ON (t.CODSEC = s.CODSEC)
+    WHEN MATCHED THEN
+      UPDATE SET t.DESCRICAO = s.DESCRICAO
+    WHEN NOT MATCHED THEN
+      INSERT (CODSEC, DESCRICAO)
+      VALUES (s.CODSEC, s.DESCRICAO);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCCATEGORIA t
+    USING (
+      SELECT
+        300 + i AS CODSEC,
+        400 + i AS CODCATEGORIA,
+        'CATEGORIA AVANCADA ' || LPAD(i, 2, '0') AS CATEGORIA,
+        'N' AS ENVIAECOMMERCE,
+        DATE '2026-04-20' - MOD(i, 10) AS DTCADASTRO
+      FROM dual
+    ) s
+    ON (t.CODSEC = s.CODSEC AND t.CODCATEGORIA = s.CODCATEGORIA)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.CATEGORIA = s.CATEGORIA,
+        t.ENVIAECOMMERCE = s.ENVIAECOMMERCE,
+        t.DTCADASTRO = s.DTCADASTRO
+    WHEN NOT MATCHED THEN
+      INSERT (CODSEC, CODCATEGORIA, CATEGORIA, ENVIAECOMMERCE, DTCADASTRO)
+      VALUES (s.CODSEC, s.CODCATEGORIA, s.CATEGORIA, s.ENVIAECOMMERCE, s.DTCADASTRO);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCLINHAPROD t
+    USING (
+      SELECT
+        500 + i AS CODLINHA,
+        'LINHA AVANCADA ' || LPAD(i, 2, '0') AS DESCRICAO,
+        CASE
+          WHEN i <= 5 THEN LPAD(10 + i, 2, '0')
+          ELSE '01'
+        END AS CODFILIAL,
+        5 AS NUMDIASTRABSEMANA,
+        2 + MOD(i, 2) AS NUMTURNODIA,
+        8 AS HORASPORTURNO,
+        12 + MOD(i, 6) AS NUMPESSOASTURNO,
+        500 + i AS CODLINHAPROD,
+        15 + i AS PRAZOMAXIMO,
+        'Linha criada para carga avançada' AS OBS
+      FROM dual
+    ) s
+    ON (t.CODLINHA = s.CODLINHA)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.DESCRICAO = s.DESCRICAO,
+        t.CODFILIAL = s.CODFILIAL,
+        t.NUMDIASTRABSEMANA = s.NUMDIASTRABSEMANA,
+        t.NUMTURNODIA = s.NUMTURNODIA,
+        t.HORASPORTURNO = s.HORASPORTURNO,
+        t.NUMPESSOASTURNO = s.NUMPESSOASTURNO,
+        t.CODLINHAPROD = s.CODLINHAPROD,
+        t.PRAZOMAXIMO = s.PRAZOMAXIMO,
+        t.OBS = s.OBS
+    WHEN NOT MATCHED THEN
+      INSERT (
+        CODLINHA, DESCRICAO, CODFILIAL, NUMDIASTRABSEMANA, NUMTURNODIA,
+        HORASPORTURNO, NUMPESSOASTURNO, CODLINHAPROD, PRAZOMAXIMO, OBS
+      )
+      VALUES (
+        s.CODLINHA, s.DESCRICAO, s.CODFILIAL, s.NUMDIASTRABSEMANA, s.NUMTURNODIA,
+        s.HORASPORTURNO, s.NUMPESSOASTURNO, s.CODLINHAPROD, s.PRAZOMAXIMO, s.OBS
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCROTULOITEM t
+    USING (
+      SELECT
+        'ROT-AV-' || LPAD(i, 3, '0') AS ID,
+        'ROTULO AVANCADO ' || LPAD(i, 2, '0') AS DESCRICAO,
+        'VAL' || LPAD(i, 2, '0') AS VALOR,
+        DATE '2026-04-20' - MOD(i, 12) AS DTCADASTRO,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'S'
+          ELSE 'N'
+        END AS CRIADOPELOCLIENTE
+      FROM dual
+    ) s
+    ON (t.ID = s.ID)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.DESCRICAO = s.DESCRICAO,
+        t.VALOR = s.VALOR,
+        t.DTCADASTRO = s.DTCADASTRO,
+        t.CRIADOPELOCLIENTE = s.CRIADOPELOCLIENTE
+    WHEN NOT MATCHED THEN
+      INSERT (ID, DESCRICAO, VALOR, DTCADASTRO, CRIADOPELOCLIENTE)
+      VALUES (s.ID, s.DESCRICAO, s.VALOR, s.DTCADASTRO, s.CRIADOPELOCLIENTE);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCCLIENT t
+    USING (
+      SELECT
+        3000 + i AS CODCLI,
+        'CLIENTE AVANCADO ' || LPAD(i, 2, '0') AS CLIENTE,
+        LPAD(66000000000000 + i, 14, '0') AS CGC,
+        'RUA CLIENTE ' || LPAD(i, 2, '0') AS ENDERECO,
+        'BAIRRO ' || LPAD(MOD(i - 1, 8) + 1, 2, '0') AS BAIRRO,
+        'CIDADE CLIENTE ' || LPAD(MOD(i - 1, 10) + 1, 2, '0') AS CIDADE,
+        CASE MOD(i, 5)
+          WHEN 0 THEN 'SP'
+          WHEN 1 THEN 'RJ'
+          WHEN 2 THEN 'MG'
+          WHEN 3 THEN 'BA'
+          ELSE 'GO'
+        END AS ESTADO,
+        LPAD(15000000 + i, 8, '0') AS CEP
+      FROM dual
+    ) s
+    ON (t.CODCLI = s.CODCLI)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.CLIENTE = s.CLIENTE,
+        t.CGC = s.CGC,
+        t.ENDERECO = s.ENDERECO,
+        t.BAIRRO = s.BAIRRO,
+        t.CIDADE = s.CIDADE,
+        t.ESTADO = s.ESTADO,
+        t.CEP = s.CEP
+    WHEN NOT MATCHED THEN
+      INSERT (CODCLI, CLIENTE, CGC, ENDERECO, BAIRRO, CIDADE, ESTADO, CEP)
+      VALUES (s.CODCLI, s.CLIENTE, s.CGC, s.ENDERECO, s.BAIRRO, s.CIDADE, s.ESTADO, s.CEP);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCEMPR t
+    USING (
+      SELECT
+        200 + i AS MATRICULA,
+        'EMPREGADO AVANCADO ' || LPAD(i, 2, '0') AS NOME,
+        DATE '2025-01-01' + i AS ADMISSAO,
+        'CIDADE EMP ' || LPAD(MOD(i - 1, 10) + 1, 2, '0') AS CIDADE,
+        CASE MOD(i, 5)
+          WHEN 0 THEN 'SP'
+          WHEN 1 THEN 'RJ'
+          WHEN 2 THEN 'MG'
+          WHEN 3 THEN 'PR'
+          ELSE 'GO'
+        END AS ESTADO,
+        'A' AS SITUACAO,
+        LPAD(11111111100 + i, 11, '0') AS CPF,
+        'T' AS TIPOVENDA,
+        CASE
+          WHEN i <= 5 THEN LPAD(10 + i, 2, '0')
+          ELSE '01'
+        END AS CODFILIAL,
+        100 + i AS CODUSUR,
+        'empregado' || LPAD(i, 2, '0') || '@seed.local' AS EMAIL,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'F'
+          ELSE 'M'
+        END AS SEXO,
+        DATE '1990-01-01' + i AS DTNASC
+      FROM dual
+    ) s
+    ON (t.MATRICULA = s.MATRICULA)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.NOME = s.NOME,
+        t.ADMISSAO = s.ADMISSAO,
+        t.CIDADE = s.CIDADE,
+        t.ESTADO = s.ESTADO,
+        t.SITUACAO = s.SITUACAO,
+        t.CPF = s.CPF,
+        t.TIPOVENDA = s.TIPOVENDA,
+        t.CODFILIAL = s.CODFILIAL,
+        t.CODUSUR = s.CODUSUR,
+        t.EMAIL = s.EMAIL,
+        t.SEXO = s.SEXO,
+        t.DTNASC = s.DTNASC
+    WHEN NOT MATCHED THEN
+      INSERT (MATRICULA, NOME, ADMISSAO, CIDADE, ESTADO, SITUACAO, CPF, TIPOVENDA, CODFILIAL, CODUSUR, EMAIL, SEXO, DTNASC)
+      VALUES (s.MATRICULA, s.NOME, s.ADMISSAO, s.CIDADE, s.ESTADO, s.SITUACAO, s.CPF, s.TIPOVENDA, s.CODFILIAL, s.CODUSUR, s.EMAIL, s.SEXO, s.DTNASC);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCUSUARI t
+    USING (
+      SELECT
+        100 + i AS CODUSUR,
+        'USUARIO AVANCADO ' || LPAD(i, 2, '0') AS NOME,
+        CASE MOD(i, 7)
+          WHEN 0 THEN 'N'
+          ELSE 'S'
+        END AS ATIVO,
+        'usuario' || LPAD(i, 2, '0') || '@seed.local' AS EMAIL
+      FROM dual
+    ) s
+    ON (t.CODUSUR = s.CODUSUR)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.NOME = s.NOME,
+        t.ATIVO = s.ATIVO,
+        t.EMAIL = s.EMAIL
+    WHEN NOT MATCHED THEN
+      INSERT (CODUSUR, NOME, ATIVO, EMAIL)
+      VALUES (s.CODUSUR, s.NOME, s.ATIVO, s.EMAIL);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..25 LOOP
+    MERGE INTO WINTHOR.PCFORNEC t
+    USING (
+      SELECT
+        2000 + i AS CODFORNEC,
+        'FORNECEDOR AVANCADO ' || LPAD(i, 2, '0') AS FORNECEDOR,
+        'REPRESENTANTE ' || LPAD(i, 2, '0') AS REPRES,
+        'CONTATO ' || LPAD(i, 2, '0') AS CONTATO,
+        'RUA FORNECEDOR ' || LPAD(i, 2, '0') AS ENDER,
+        'CIDADE ' || LPAD(MOD(i - 1, 10) + 1, 2, '0') AS CIDADE,
+        CASE MOD(i, 5)
+          WHEN 0 THEN 'SP'
+          WHEN 1 THEN 'RJ'
+          WHEN 2 THEN 'MG'
+          WHEN 3 THEN 'PR'
+          ELSE 'GO'
+        END AS ESTADO,
+        LPAD(13000000 + i, 8, '0') AS CEP,
+        '1199999' || LPAD(i, 4, '0') AS TELFAB,
+        LPAD(88000000000000 + i, 14, '0') AS CGC,
+        'N' AS BLOQUEIO,
+        DATE '2026-04-20' - MOD(i, 15) AS DTCADASTRO,
+        'Fornecedor gerado para massa de cadastro' AS OBSERVACAO,
+        'fornecedor' || LPAD(i, 2, '0') || '@seed.local' AS EMAIL,
+        'FANTASIA FORN ' || LPAD(i, 2, '0') AS FANTASIA,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'C'
+          ELSE 'I'
+        END AS TIPOFORNEC
+      FROM dual
+    ) s
+    ON (t.CODFORNEC = s.CODFORNEC)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.FORNECEDOR = s.FORNECEDOR,
+        t.REPRES = s.REPRES,
+        t.CONTATO = s.CONTATO,
+        t.ENDER = s.ENDER,
+        t.CIDADE = s.CIDADE,
+        t.ESTADO = s.ESTADO,
+        t.CEP = s.CEP,
+        t.TELFAB = s.TELFAB,
+        t.CGC = s.CGC,
+        t.BLOQUEIO = s.BLOQUEIO,
+        t.DTCADASTRO = s.DTCADASTRO,
+        t.OBSERVACAO = s.OBSERVACAO,
+        t.EMAIL = s.EMAIL,
+        t.FANTASIA = s.FANTASIA,
+        t.TIPOFORNEC = s.TIPOFORNEC
+    WHEN NOT MATCHED THEN
+      INSERT (
+        CODFORNEC, FORNECEDOR, REPRES, CONTATO, ENDER, CIDADE, ESTADO, CEP,
+        TELFAB, CGC, BLOQUEIO, DTCADASTRO, OBSERVACAO, EMAIL, FANTASIA, TIPOFORNEC
+      )
+      VALUES (
+        s.CODFORNEC, s.FORNECEDOR, s.REPRES, s.CONTATO, s.ENDER, s.CIDADE, s.ESTADO, s.CEP,
+        s.TELFAB, s.CGC, s.BLOQUEIO, s.DTCADASTRO, s.OBSERVACAO, s.EMAIL, s.FANTASIA, s.TIPOFORNEC
+      );
+  END LOOP;
+END;
+/

@@ -1,0 +1,867 @@
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCPEDC t
+    USING (
+      SELECT
+        10000 + i AS NUMPED,
+        3000 + MOD(i - 1, 25) + 1 AS CODCLI,
+        100 + MOD(i - 1, 25) + 1 AS CODUSUR,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DATA,
+        CASE MOD(i, 4)
+          WHEN 0 THEN 'F'
+          WHEN 1 THEN 'L'
+          WHEN 2 THEN 'A'
+          ELSE 'B'
+        END AS POSICAO,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIAL,
+        MOD(i - 1, 4) + 1 AS CONDVENDA,
+        ROUND(75 + (i * 3.8), 2) AS VLTOTAL
+      FROM dual
+    ) s
+    ON (t.NUMPED = s.NUMPED)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.CODCLI = s.CODCLI,
+        t.CODUSUR = s.CODUSUR,
+        t.DATA = s.DATA,
+        t.POSICAO = s.POSICAO,
+        t.CODFILIAL = s.CODFILIAL,
+        t.CONDVENDA = s.CONDVENDA,
+        t.VLTOTAL = s.VLTOTAL
+    WHEN NOT MATCHED THEN
+      INSERT (NUMPED, CODCLI, CODUSUR, DATA, POSICAO, CODFILIAL, CONDVENDA, VLTOTAL)
+      VALUES (s.NUMPED, s.CODCLI, s.CODUSUR, s.DATA, s.POSICAO, s.CODFILIAL, s.CONDVENDA, s.VLTOTAL);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR filial_rec IN (
+    SELECT DISTINCT TRIM(CODIGO) AS CODFILIAL
+    FROM WINTHOR.PCFILIAL
+    WHERE CODIGO IS NOT NULL
+  ) LOOP
+    FOR i IN 1..100 LOOP
+      MERGE INTO WINTHOR.PCEST t
+      USING (
+        SELECT
+          5000 + i AS CODPROD,
+          filial_rec.CODFILIAL AS CODFILIAL,
+          ROUND(50 + MOD(i * 3, 120), 3) AS QTESTGER,
+          ROUND(MOD(i, 15), 3) AS QTRESERV,
+          ROUND(MOD(i, 7), 3) AS QTBLOQUEADA
+        FROM dual
+      ) s
+      ON (t.CODPROD = s.CODPROD AND t.CODFILIAL = s.CODFILIAL)
+      WHEN MATCHED THEN
+        UPDATE SET
+          t.QTESTGER = s.QTESTGER,
+          t.QTRESERV = s.QTRESERV,
+          t.QTBLOQUEADA = s.QTBLOQUEADA
+      WHEN NOT MATCHED THEN
+        INSERT (CODPROD, CODFILIAL, QTESTGER, QTRESERV, QTBLOQUEADA)
+        VALUES (s.CODPROD, s.CODFILIAL, s.QTESTGER, s.QTRESERV, s.QTBLOQUEADA);
+    END LOOP;
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCESTCOM t
+    USING (
+      SELECT
+        70000 + i AS NUMTRANSENT,
+        ROUND(MOD(i, 20), 2) AS VLDEVOLUCAO,
+        ROUND(5 + MOD(i, 18), 2) AS VLESTORNO,
+        DATE '2026-04-05' + MOD(i - 1, 20) AS DTESTORNO,
+        100 + MOD(i - 1, 25) + 1 AS CODUSUR,
+        200 + MOD(i - 1, 25) + 1 AS CODFUNC,
+        80000 + i AS NUMTRANSVENDA,
+        'ESTORNO TRANS ' || LPAD(i, 4, '0') AS HISTORICO,
+        DATE '2026-04-05' + MOD(i - 1, 20) AS DTLANC,
+        ROUND(5 + MOD(i, 18), 6) AS VLESTORNOCMV
+      FROM dual
+    ) s
+    ON (t.NUMTRANSENT = s.NUMTRANSENT)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.VLDEVOLUCAO = s.VLDEVOLUCAO,
+        t.VLESTORNO = s.VLESTORNO,
+        t.DTESTORNO = s.DTESTORNO,
+        t.CODUSUR = s.CODUSUR,
+        t.CODFUNC = s.CODFUNC,
+        t.NUMTRANSVENDA = s.NUMTRANSVENDA,
+        t.HISTORICO = s.HISTORICO,
+        t.DTLANC = s.DTLANC,
+        t.VLESTORNOCMV = s.VLESTORNOCMV
+    WHEN NOT MATCHED THEN
+      INSERT (NUMTRANSENT, VLDEVOLUCAO, VLESTORNO, DTESTORNO, CODUSUR, CODFUNC, NUMTRANSVENDA, HISTORICO, DTLANC, VLESTORNOCMV)
+      VALUES (s.NUMTRANSENT, s.VLDEVOLUCAO, s.VLESTORNO, s.DTESTORNO, s.CODUSUR, s.CODFUNC, s.NUMTRANSVENDA, s.HISTORICO, s.DTLANC, s.VLESTORNOCMV);
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCMOVCOMPLE t
+    USING (
+      SELECT
+        60000 + i AS NUMTRANSITEM,
+        DATE '2026-04-05' + MOD(i - 1, 20) AS DTREGISTRO,
+        ROUND(1.65 + MOD(i, 5), 4) AS PERPISCALCDI,
+        ROUND(7.60 + MOD(i, 6), 4) AS PERCOFINSCALCDI,
+        ROUND(5 + MOD(i, 12), 2) AS PISRETIDO,
+        ROUND(6 + MOD(i, 10), 2) AS COFINSRETIDO,
+        ROUND(2 + MOD(i, 8), 2) AS IRRETIDO,
+        ROUND(1 + MOD(i, 7), 2) AS CSLLRETIDO,
+        ROUND(1 + MOD(i, 20), 6) AS VLPISRETIDO,
+        ROUND(2 + MOD(i, 22), 6) AS VLCOFINSRETIDO,
+        ROUND(1 + MOD(i, 15), 6) AS VLIRRETIDO,
+        ROUND(1 + MOD(i, 10), 6) AS VLCSLLRETIDO,
+        ROUND(5 + MOD(i, 18), 6) AS VLICMS,
+        ROUND(4 + MOD(i, 12), 4) AS PERDIFEREIMENTOICMS,
+        ROUND(3 + MOD(i, 16), 6) AS VLICMSDIFERIDO,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIALDEST,
+        2000 + MOD(i - 1, 25) + 1 AS CODFORNEC,
+        'PRODUTO COMPLEMENTAR ' || LPAD(MOD(i - 1, 100) + 1, 3, '0') AS PRODDESCRICAODANFE,
+        ROUND(20 + MOD(i, 25), 6) AS PRECOMAXCONSUM
+      FROM dual
+    ) s
+    ON (t.NUMTRANSITEM = s.NUMTRANSITEM)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.DTREGISTRO = s.DTREGISTRO,
+        t.PERPISCALCDI = s.PERPISCALCDI,
+        t.PERCOFINSCALCDI = s.PERCOFINSCALCDI,
+        t.PISRETIDO = s.PISRETIDO,
+        t.COFINSRETIDO = s.COFINSRETIDO,
+        t.IRRETIDO = s.IRRETIDO,
+        t.CSLLRETIDO = s.CSLLRETIDO,
+        t.VLPISRETIDO = s.VLPISRETIDO,
+        t.VLCOFINSRETIDO = s.VLCOFINSRETIDO,
+        t.VLIRRETIDO = s.VLIRRETIDO,
+        t.VLCSLLRETIDO = s.VLCSLLRETIDO,
+        t.VLICMS = s.VLICMS,
+        t.PERDIFEREIMENTOICMS = s.PERDIFEREIMENTOICMS,
+        t.VLICMSDIFERIDO = s.VLICMSDIFERIDO,
+        t.CODFILIALDEST = s.CODFILIALDEST,
+        t.CODFORNEC = s.CODFORNEC,
+        t.PRODDESCRICAODANFE = s.PRODDESCRICAODANFE,
+        t.PRECOMAXCONSUM = s.PRECOMAXCONSUM
+    WHEN NOT MATCHED THEN
+      INSERT (
+        NUMTRANSITEM, DTREGISTRO, PERPISCALCDI, PERCOFINSCALCDI, PISRETIDO, COFINSRETIDO, IRRETIDO,
+        CSLLRETIDO, VLPISRETIDO, VLCOFINSRETIDO, VLIRRETIDO, VLCSLLRETIDO, VLICMS,
+        PERDIFEREIMENTOICMS, VLICMSDIFERIDO, CODFILIALDEST, CODFORNEC, PRODDESCRICAODANFE, PRECOMAXCONSUM
+      )
+      VALUES (
+        s.NUMTRANSITEM, s.DTREGISTRO, s.PERPISCALCDI, s.PERCOFINSCALCDI, s.PISRETIDO, s.COFINSRETIDO, s.IRRETIDO,
+        s.CSLLRETIDO, s.VLPISRETIDO, s.VLCOFINSRETIDO, s.VLIRRETIDO, s.VLCSLLRETIDO, s.VLICMS,
+        s.PERDIFEREIMENTOICMS, s.VLICMSDIFERIDO, s.CODFILIALDEST, s.CODFORNEC, s.PRODDESCRICAODANFE, s.PRECOMAXCONSUM
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    INSERT INTO WINTHOR.PCHISTEST (
+      CODFILIAL, CODPROD, "DATA", QTEST, QTESTGER, CUSTOCONT, CUSTOREAL, CUSTOFIN,
+      CUSTOREP, VLVENDA, DESCRICAO, UNIDADE, EMBALAGEM, HISTORICO
+    )
+    SELECT
+      CASE MOD(i, 5)
+        WHEN 1 THEN '11'
+        WHEN 2 THEN '12'
+        WHEN 3 THEN '13'
+        WHEN 4 THEN '14'
+        ELSE '15'
+      END,
+      5000 + MOD(i - 1, 100) + 1,
+      DATE '2026-04-01' + MOD(i - 1, 20),
+      ROUND(30 + MOD(i * 2, 60), 8),
+      ROUND(40 + MOD(i * 3, 80), 8),
+      ROUND(7 + MOD(i, 25), 6),
+      ROUND(7 + MOD(i, 25), 6),
+      ROUND(7 + MOD(i, 25), 6),
+      ROUND(8 + MOD(i, 27), 6),
+      ROUND(12 + MOD(i, 35), 2),
+      'PRODUTO AVANCADO ' || LPAD(MOD(i - 1, 100) + 1, 3, '0'),
+      'UN',
+      CASE MOD(i, 4)
+        WHEN 0 THEN 'CX'
+        WHEN 1 THEN 'UN'
+        WHEN 2 THEN 'PC'
+        ELSE 'FD'
+      END,
+      'S'
+    FROM dual
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM WINTHOR.PCHISTEST h
+      WHERE h.CODFILIAL = CASE MOD(i, 5)
+        WHEN 1 THEN '11'
+        WHEN 2 THEN '12'
+        WHEN 3 THEN '13'
+        WHEN 4 THEN '14'
+        ELSE '15'
+      END
+        AND h.CODPROD = 5000 + MOD(i - 1, 100) + 1
+        AND h."DATA" = DATE '2026-04-01' + MOD(i - 1, 20)
+    );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCNFSAID t
+    USING (
+      SELECT
+        'NF' AS ESPECIE,
+        '1' AS SERIE,
+        45000 + i AS NUMNOTA,
+        DATE '2026-04-05' + MOD(i - 1, 20) AS DTSAIDA,
+        ROUND(120 + (i * 4.1), 2) AS VLTOTAL,
+        5102 AS CODFISCAL,
+        3000 + MOD(i - 1, 25) + 1 AS CODCLI,
+        100 + MOD(i - 1, 25) + 1 AS CODUSUR,
+        DATE '2026-04-06' + MOD(i - 1, 20) AS DTENTREGA,
+        ROUND(120 + (i * 4.1), 2) AS VLTOTGER,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIAL,
+        ROUND(MOD(i, 8), 2) AS VLDESCONTO,
+        'VD' AS TIPOVENDA,
+        'NF SAIDA TRANS ' || LPAD(i, 4, '0') AS OBS,
+        ROUND(18 + MOD(i, 20), 2) AS TOTPESO,
+        ROUND(2 + MOD(i, 5), 2) AS TOTVOLUME,
+        2 AS NUMITENS,
+        'C' || LPAD(MOD(i - 1, 25) + 1, 3, '0') AS CODCOB,
+        10000 + i AS NUMPED,
+        100 + MOD(i - 1, 25) + 1 AS CODPLPAG,
+        MOD(i - 1, 4) + 1 AS CONDVENDA,
+        'SP' AS UF,
+        ROUND(115 + (i * 3.9), 2) AS VLBASE,
+        ROUND(5 + MOD(i, 14), 2) AS VLICMS,
+        ROUND(MOD(i, 6), 2) AS VLOUTRAS
+      FROM dual
+    ) s
+    ON (t.NUMNOTA = s.NUMNOTA AND t.CODCLI = s.CODCLI AND t.SERIE = s.SERIE)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.ESPECIE = s.ESPECIE,
+        t.DTSAIDA = s.DTSAIDA,
+        t.VLTOTAL = s.VLTOTAL,
+        t.CODFISCAL = s.CODFISCAL,
+        t.CODUSUR = s.CODUSUR,
+        t.DTENTREGA = s.DTENTREGA,
+        t.VLTOTGER = s.VLTOTGER,
+        t.CODFILIAL = s.CODFILIAL,
+        t.VLDESCONTO = s.VLDESCONTO,
+        t.TIPOVENDA = s.TIPOVENDA,
+        t.OBS = s.OBS,
+        t.TOTPESO = s.TOTPESO,
+        t.TOTVOLUME = s.TOTVOLUME,
+        t.NUMITENS = s.NUMITENS,
+        t.CODCOB = s.CODCOB,
+        t.NUMPED = s.NUMPED,
+        t.CODPLPAG = s.CODPLPAG,
+        t.CONDVENDA = s.CONDVENDA,
+        t.UF = s.UF,
+        t.VLBASE = s.VLBASE,
+        t.VLICMS = s.VLICMS,
+        t.VLOUTRAS = s.VLOUTRAS
+    WHEN NOT MATCHED THEN
+      INSERT (
+        ESPECIE, SERIE, NUMNOTA, DTSAIDA, VLTOTAL, CODFISCAL, CODCLI, CODUSUR, DTENTREGA,
+        VLTOTGER, CODFILIAL, VLDESCONTO, TIPOVENDA, OBS, TOTPESO, TOTVOLUME, NUMITENS, CODCOB,
+        NUMPED, CODPLPAG, CONDVENDA, UF, VLBASE, VLICMS, VLOUTRAS
+      )
+      VALUES (
+        s.ESPECIE, s.SERIE, s.NUMNOTA, s.DTSAIDA, s.VLTOTAL, s.CODFISCAL, s.CODCLI, s.CODUSUR, s.DTENTREGA,
+        s.VLTOTGER, s.CODFILIAL, s.VLDESCONTO, s.TIPOVENDA, s.OBS, s.TOTPESO, s.TOTVOLUME, s.NUMITENS, s.CODCOB,
+        s.NUMPED, s.CODPLPAG, s.CONDVENDA, s.UF, s.VLBASE, s.VLICMS, s.VLOUTRAS
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCPEDCFV t
+    USING (
+      SELECT
+        1 AS IMPORTADO,
+        40000 + i AS NUMPEDRCA,
+        100 + MOD(i - 1, 25) + 1 AS CODUSUR,
+        LPAD(66000000000000 + MOD(i - 1, 25) + 1, 14, '0') AS CGCCLI,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DTABERTURAPEDPALM,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DTFECHAMENTOPEDPALM,
+        'FV-' || LPAD(i, 5, '0') AS NUMPEDCLI,
+        DATE '2026-04-05' + MOD(i - 1, 20) AS DTENTREGA,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIAL,
+        'C' || LPAD(MOD(i - 1, 25) + 1, 3, '0') AS CODCOB,
+        100 + MOD(i - 1, 25) + 1 AS CODPLPAG,
+        MOD(i - 1, 4) + 1 AS CONDVENDA,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DTINCLUSAO,
+        10000 + i AS NUMPED,
+        3000 + MOD(i - 1, 25) + 1 AS CODCLI,
+        CASE MOD(i, 3)
+          WHEN 0 THEN 'A'
+          WHEN 1 THEN 'B'
+          ELSE 'F'
+        END AS POSICAO_ATUAL
+      FROM dual
+    ) s
+    ON (t.NUMPEDRCA = s.NUMPEDRCA)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.IMPORTADO = s.IMPORTADO,
+        t.CODUSUR = s.CODUSUR,
+        t.CGCCLI = s.CGCCLI,
+        t.DTABERTURAPEDPALM = s.DTABERTURAPEDPALM,
+        t.DTFECHAMENTOPEDPALM = s.DTFECHAMENTOPEDPALM,
+        t.NUMPEDCLI = s.NUMPEDCLI,
+        t.DTENTREGA = s.DTENTREGA,
+        t.CODFILIAL = s.CODFILIAL,
+        t.CODCOB = s.CODCOB,
+        t.CODPLPAG = s.CODPLPAG,
+        t.CONDVENDA = s.CONDVENDA,
+        t.DTINCLUSAO = s.DTINCLUSAO,
+        t.NUMPED = s.NUMPED,
+        t.CODCLI = s.CODCLI,
+        t.POSICAO_ATUAL = s.POSICAO_ATUAL
+    WHEN NOT MATCHED THEN
+      INSERT (
+        IMPORTADO, NUMPEDRCA, CODUSUR, CGCCLI, DTABERTURAPEDPALM, DTFECHAMENTOPEDPALM, NUMPEDCLI,
+        DTENTREGA, CODFILIAL, CODCOB, CODPLPAG, CONDVENDA, DTINCLUSAO, NUMPED, CODCLI, POSICAO_ATUAL
+      )
+      VALUES (
+        s.IMPORTADO, s.NUMPEDRCA, s.CODUSUR, s.CGCCLI, s.DTABERTURAPEDPALM, s.DTFECHAMENTOPEDPALM, s.NUMPEDCLI,
+        s.DTENTREGA, s.CODFILIAL, s.CODCOB, s.CODPLPAG, s.CONDVENDA, s.DTINCLUSAO, s.NUMPED, s.CODCLI, s.POSICAO_ATUAL
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCPEDIFV t
+    USING (
+      SELECT
+        40000 + i AS NUMPEDRCA,
+        LPAD(66000000000000 + MOD(i - 1, 25) + 1, 14, '0') AS CGCCLI,
+        100 + MOD(i - 1, 25) + 1 AS CODUSUR,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DTABERTURAPEDPALM,
+        5000 + MOD(i - 1, 100) + 1 AS CODPROD,
+        ROUND(1 + MOD(i, 12), 6) AS QT,
+        ROUND(9.9 + MOD(i, 25), 6) AS PVENDA,
+        CASE MOD(i, 5)
+          WHEN 1 THEN 1100000005000 + MOD(i - 1, 100) + 1
+          WHEN 2 THEN 1200000005000 + MOD(i - 1, 100) + 1
+          WHEN 3 THEN 1300000005000 + MOD(i - 1, 100) + 1
+          WHEN 4 THEN 1400000005000 + MOD(i - 1, 100) + 1
+          ELSE 1500000005000 + MOD(i - 1, 100) + 1
+        END AS CODAUXILIAR,
+        i AS NUMSEQ,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIALRETIRA,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DTINCLUSAO,
+        CASE MOD(i, 7)
+          WHEN 0 THEN 'S'
+          ELSE 'N'
+        END AS BONIFIC,
+        10000 + i AS NUMPED,
+        'FV-' || LPAD(i, 5, '0') AS NUMPEDCLI,
+        MOD(i - 1, 4) + 1 AS NUMITEMPED,
+        DATE '2026-04-05' + MOD(i - 1, 20) AS DTENTREGA
+      FROM dual
+    ) s
+    ON (t.NUMPEDRCA = s.NUMPEDRCA AND t.NUMSEQ = s.NUMSEQ)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.CGCCLI = s.CGCCLI,
+        t.CODUSUR = s.CODUSUR,
+        t.DTABERTURAPEDPALM = s.DTABERTURAPEDPALM,
+        t.CODPROD = s.CODPROD,
+        t.QT = s.QT,
+        t.PVENDA = s.PVENDA,
+        t.CODAUXILIAR = s.CODAUXILIAR,
+        t.CODFILIALRETIRA = s.CODFILIALRETIRA,
+        t.DTINCLUSAO = s.DTINCLUSAO,
+        t.BONIFIC = s.BONIFIC,
+        t.NUMPED = s.NUMPED,
+        t.NUMPEDCLI = s.NUMPEDCLI,
+        t.NUMITEMPED = s.NUMITEMPED,
+        t.DTENTREGA = s.DTENTREGA
+    WHEN NOT MATCHED THEN
+      INSERT (
+        NUMPEDRCA, CGCCLI, CODUSUR, DTABERTURAPEDPALM, CODPROD, QT, PVENDA, CODAUXILIAR,
+        NUMSEQ, CODFILIALRETIRA, DTINCLUSAO, BONIFIC, NUMPED, NUMPEDCLI, NUMITEMPED, DTENTREGA
+      )
+      VALUES (
+        s.NUMPEDRCA, s.CGCCLI, s.CODUSUR, s.DTABERTURAPEDPALM, s.CODPROD, s.QT, s.PVENDA, s.CODAUXILIAR,
+        s.NUMSEQ, s.CODFILIALRETIRA, s.DTINCLUSAO, s.BONIFIC, s.NUMPED, s.NUMPEDCLI, s.NUMITEMPED, s.DTENTREGA
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    FOR j IN 1..2 LOOP
+      MERGE INTO WINTHOR.PCPEDI t
+      USING (
+        SELECT
+          10000 + i AS NUMPED,
+          j AS NUMITEM,
+          5000 + MOD(((i - 1) * 2) + j - 1, 100) + 1 AS CODPROD,
+          ROUND(1 + MOD(i + j, 9) + (j * 0.5), 3) AS QT,
+          ROUND(9.5 + MOD(i * j, 40) + (j * 1.15), 4) AS PVENDA,
+          ROUND(6.2 + MOD(i + j, 25) + (j * 0.75), 4) AS VLCUSTOFIN,
+          CASE MOD(i + j, 7)
+            WHEN 0 THEN 'S'
+            ELSE 'N'
+          END AS BONIFIC
+        FROM dual
+      ) s
+      ON (t.NUMPED = s.NUMPED AND t.NUMITEM = s.NUMITEM)
+      WHEN MATCHED THEN
+        UPDATE SET
+          t.CODPROD = s.CODPROD,
+          t.QT = s.QT,
+          t.PVENDA = s.PVENDA,
+          t.VLCUSTOFIN = s.VLCUSTOFIN,
+          t.BONIFIC = s.BONIFIC
+      WHEN NOT MATCHED THEN
+        INSERT (NUMPED, NUMITEM, CODPROD, QT, PVENDA, VLCUSTOFIN, BONIFIC)
+        VALUES (s.NUMPED, s.NUMITEM, s.CODPROD, s.QT, s.PVENDA, s.VLCUSTOFIN, s.BONIFIC);
+    END LOOP;
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCPEDIDO t
+    USING (
+      SELECT
+        20000 + i AS NUMPED,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DTEMISSAO,
+        2000 + MOD(i - 1, 25) + 1 AS CODFORNEC,
+        ROUND(180 + (i * 6.2), 2) AS VLTOTAL,
+        DATE '2026-04-08' + MOD(i - 1, 20) AS DTPREVENT,
+        'PEDIDO COMPRA TRANS ' || LPAD(i, 4, '0') AS OBS,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIAL,
+        'TRANSP ' || LPAD(MOD(i - 1, 15) + 1, 2, '0') AS TRANSPORTE,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'C'
+          ELSE 'F'
+        END AS FRETE,
+        ROUND(15 + MOD(i, 25), 2) AS VLENTREGUE,
+        ROUND(165 + (i * 5.5), 2) AS VLPRODUTO,
+        MOD(i - 1, 3) + 1 AS CODPLPAG,
+        ROUND(10 + MOD(i, 30), 2) AS VLFRETE,
+        CASE MOD(i, 3)
+          WHEN 0 THEN 'S'
+          ELSE 'N'
+        END AS CONFIRMADO,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'C'
+          ELSE 'V'
+        END AS TIPOEMBALAGEMPEDIDO
+      FROM dual
+    ) s
+    ON (t.NUMPED = s.NUMPED)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.DTEMISSAO = s.DTEMISSAO,
+        t.CODFORNEC = s.CODFORNEC,
+        t.VLTOTAL = s.VLTOTAL,
+        t.DTPREVENT = s.DTPREVENT,
+        t.OBS = s.OBS,
+        t.CODFILIAL = s.CODFILIAL,
+        t.TRANSPORTE = s.TRANSPORTE,
+        t.FRETE = s.FRETE,
+        t.VLENTREGUE = s.VLENTREGUE,
+        t.VLPRODUTO = s.VLPRODUTO,
+        t.CODPLPAG = s.CODPLPAG,
+        t.VLFRETE = s.VLFRETE,
+        t.CONFIRMADO = s.CONFIRMADO,
+        t.TIPOEMBALAGEMPEDIDO = s.TIPOEMBALAGEMPEDIDO
+    WHEN NOT MATCHED THEN
+      INSERT (
+        NUMPED, DTEMISSAO, CODFORNEC, VLTOTAL, DTPREVENT, OBS, CODFILIAL, TRANSPORTE,
+        FRETE, VLENTREGUE, VLPRODUTO, CODPLPAG, VLFRETE, CONFIRMADO, TIPOEMBALAGEMPEDIDO
+      )
+      VALUES (
+        s.NUMPED, s.DTEMISSAO, s.CODFORNEC, s.VLTOTAL, s.DTPREVENT, s.OBS, s.CODFILIAL, s.TRANSPORTE,
+        s.FRETE, s.VLENTREGUE, s.VLPRODUTO, s.CODPLPAG, s.VLFRETE, s.CONFIRMADO, s.TIPOEMBALAGEMPEDIDO
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    FOR j IN 1..2 LOOP
+      MERGE INTO WINTHOR.PCITEM t
+      USING (
+        SELECT
+          5000 + MOD(((i - 1) * 2) + j - 1, 100) + 1 AS CODPROD,
+          20000 + i AS NUMPED,
+          ROUND(7.5 + MOD(i + j, 30), 6) AS PCOMPRA,
+          ROUND(2 + MOD(i + j, 12), 6) AS QTPEDIDA,
+          ROUND(MOD(i + j, 4), 6) AS QTENTREGUE,
+          ROUND(7.1 + MOD(i + j, 28), 6) AS PLIQUIDO,
+          ROUND(4 + MOD(i, 9), 4) AS PERICM,
+          ROUND(MOD(i + j, 6), 4) AS PERCDESC,
+          (i * 10) + j AS NUMSEQ,
+          DATE '2026-04-10' + MOD(i - 1, 20) AS DATAENTREGA,
+          ROUND(10.5 + MOD(i + j, 35), 6) AS PTABELA,
+          CASE MOD(i + j, 3)
+            WHEN 0 THEN 'AB'
+            WHEN 1 THEN 'AP'
+            ELSE 'PE'
+          END AS STATUS,
+          CASE MOD(i + j, 2)
+            WHEN 0 THEN 'C'
+            ELSE 'V'
+          END AS TIPOEMBALAGEMPEDIDO
+        FROM dual
+      ) s
+      ON (t.NUMPED = s.NUMPED AND t.NUMSEQ = s.NUMSEQ)
+      WHEN MATCHED THEN
+        UPDATE SET
+          t.CODPROD = s.CODPROD,
+          t.PCOMPRA = s.PCOMPRA,
+          t.QTPEDIDA = s.QTPEDIDA,
+          t.QTENTREGUE = s.QTENTREGUE,
+          t.PLIQUIDO = s.PLIQUIDO,
+          t.PERICM = s.PERICM,
+          t.PERCDESC = s.PERCDESC,
+          t.DATAENTREGA = s.DATAENTREGA,
+          t.PTABELA = s.PTABELA,
+          t.STATUS = s.STATUS,
+          t.TIPOEMBALAGEMPEDIDO = s.TIPOEMBALAGEMPEDIDO
+      WHEN NOT MATCHED THEN
+        INSERT (
+          CODPROD, NUMPED, PCOMPRA, QTPEDIDA, QTENTREGUE, PLIQUIDO, PERICM, PERCDESC,
+          NUMSEQ, DATAENTREGA, PTABELA, STATUS, TIPOEMBALAGEMPEDIDO
+        )
+        VALUES (
+          s.CODPROD, s.NUMPED, s.PCOMPRA, s.QTPEDIDA, s.QTENTREGUE, s.PLIQUIDO, s.PERICM, s.PERCDESC,
+          s.NUMSEQ, s.DATAENTREGA, s.PTABELA, s.STATUS, s.TIPOEMBALAGEMPEDIDO
+        );
+    END LOOP;
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCNFENTPREENT t
+    USING (
+      SELECT
+        'PE' AS ESPECIE,
+        '1' AS SERIE,
+        30000 + i AS NUMNOTA,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DTEMISSAO,
+        DATE '2026-04-02' + MOD(i - 1, 20) AS DTENT,
+        2000 + MOD(i - 1, 25) + 1 AS CODFORNEC,
+        ROUND(240 + (i * 5.4), 2) AS VLTOTAL,
+        1102 AS CODFISCAL,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIAL,
+        'PRE-ENTRADA TRANS ' || LPAD(i, 4, '0') AS OBS,
+        2 + MOD(i, 8) AS NUMVOL,
+        ROUND(15 + (i * 0.75), 6) AS TOTPESO,
+        ROUND(12 + MOD(i, 20), 2) AS VLFRETE,
+        ROUND(225 + (i * 4.8), 2) AS VLTOTALITENS,
+        CASE MOD(i, 3)
+          WHEN 0 THEN 'AB'
+          WHEN 1 THEN 'PE'
+          ELSE 'AP'
+        END AS STATUS,
+        20000 + i AS NUMPEDPREENT,
+        CASE MOD(i, 2)
+          WHEN 0 THEN 'N'
+          ELSE 'S'
+        END AS TIPOPREENT
+      FROM dual
+    ) s
+    ON (t.NUMNOTA = s.NUMNOTA AND t.CODFORNEC = s.CODFORNEC AND t.SERIE = s.SERIE)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.ESPECIE = s.ESPECIE,
+        t.DTEMISSAO = s.DTEMISSAO,
+        t.DTENT = s.DTENT,
+        t.VLTOTAL = s.VLTOTAL,
+        t.CODFISCAL = s.CODFISCAL,
+        t.CODFILIAL = s.CODFILIAL,
+        t.OBS = s.OBS,
+        t.NUMVOL = s.NUMVOL,
+        t.TOTPESO = s.TOTPESO,
+        t.VLFRETE = s.VLFRETE,
+        t.VLTOTALITENS = s.VLTOTALITENS,
+        t.STATUS = s.STATUS,
+        t.NUMPEDPREENT = s.NUMPEDPREENT,
+        t.TIPOPREENT = s.TIPOPREENT
+    WHEN NOT MATCHED THEN
+      INSERT (
+        ESPECIE, SERIE, NUMNOTA, DTEMISSAO, DTENT, CODFORNEC, VLTOTAL, CODFISCAL,
+        CODFILIAL, OBS, NUMVOL, TOTPESO, VLFRETE, VLTOTALITENS, STATUS, NUMPEDPREENT, TIPOPREENT
+      )
+      VALUES (
+        s.ESPECIE, s.SERIE, s.NUMNOTA, s.DTEMISSAO, s.DTENT, s.CODFORNEC, s.VLTOTAL, s.CODFISCAL,
+        s.CODFILIAL, s.OBS, s.NUMVOL, s.TOTPESO, s.VLFRETE, s.VLTOTALITENS, s.STATUS, s.NUMPEDPREENT, s.TIPOPREENT
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCNFENT t
+    USING (
+      SELECT
+        'NF' AS ESPECIE,
+        '1' AS SERIE,
+        35000 + i AS NUMNOTA,
+        DATE '2026-04-01' + MOD(i - 1, 20) AS DTEMISSAO,
+        DATE '2026-04-03' + MOD(i - 1, 20) AS DTENT,
+        2000 + MOD(i - 1, 25) + 1 AS CODFORNEC,
+        ROUND(260 + (i * 5.7), 2) AS VLTOTAL,
+        1102 AS CODFISCAL,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIAL,
+        'NF ENTRADA TRANS ' || LPAD(i, 4, '0') AS OBS,
+        2 + MOD(i, 7) AS NUMVOL,
+        ROUND(18 + (i * 0.82), 6) AS TOTPESO,
+        ROUND(14 + MOD(i, 22), 2) AS VLFRETE,
+        ROUND(248 + (i * 5.2), 2) AS VLTOTGER,
+        'SP' AS UF,
+        ROUND(240 + (i * 4.9), 2) AS VLBASE,
+        ROUND(12 + MOD(i, 18), 2) AS VLICMS,
+        ROUND(MOD(i, 7), 2) AS VLOUTRAS,
+        'FORNECEDOR AVANCADO ' || LPAD(MOD(i - 1, 25) + 1, 2, '0') AS FORNECEDOR,
+        LPAD(88000000000000 + MOD(i - 1, 25) + 1, 14, '0') AS CGC,
+        'C' AS TIPOFORNEC
+      FROM dual
+    ) s
+    ON (t.NUMNOTA = s.NUMNOTA AND t.CODFORNEC = s.CODFORNEC AND t.SERIE = s.SERIE)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.ESPECIE = s.ESPECIE,
+        t.DTEMISSAO = s.DTEMISSAO,
+        t.DTENT = s.DTENT,
+        t.VLTOTAL = s.VLTOTAL,
+        t.CODFISCAL = s.CODFISCAL,
+        t.CODFILIAL = s.CODFILIAL,
+        t.OBS = s.OBS,
+        t.NUMVOL = s.NUMVOL,
+        t.TOTPESO = s.TOTPESO,
+        t.VLFRETE = s.VLFRETE,
+        t.VLTOTGER = s.VLTOTGER,
+        t.UF = s.UF,
+        t.VLBASE = s.VLBASE,
+        t.VLICMS = s.VLICMS,
+        t.VLOUTRAS = s.VLOUTRAS,
+        t.FORNECEDOR = s.FORNECEDOR,
+        t.CGC = s.CGC,
+        t.TIPOFORNEC = s.TIPOFORNEC
+    WHEN NOT MATCHED THEN
+      INSERT (
+        ESPECIE, SERIE, NUMNOTA, DTEMISSAO, DTENT, CODFORNEC, VLTOTAL, CODFISCAL,
+        CODFILIAL, OBS, NUMVOL, TOTPESO, VLFRETE, VLTOTGER, UF, VLBASE, VLICMS, VLOUTRAS,
+        FORNECEDOR, CGC, TIPOFORNEC
+      )
+      VALUES (
+        s.ESPECIE, s.SERIE, s.NUMNOTA, s.DTEMISSAO, s.DTENT, s.CODFORNEC, s.VLTOTAL, s.CODFISCAL,
+        s.CODFILIAL, s.OBS, s.NUMVOL, s.TOTPESO, s.VLFRETE, s.VLTOTGER, s.UF, s.VLBASE, s.VLICMS, s.VLOUTRAS,
+        s.FORNECEDOR, s.CGC, s.TIPOFORNEC
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCMOVPREENT t
+    USING (
+      SELECT
+        DATE '2026-04-02' + MOD(i - 1, 20) AS DTMOV,
+        5000 + MOD(i - 1, 100) + 1 AS CODPROD,
+        30000 + i AS NUMNOTA,
+        'EN' AS CODOPER,
+        ROUND(2 + MOD(i, 15), 6) AS QT,
+        ROUND(7.8 + MOD(i, 35), 6) AS PUNIT,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIAL,
+        CASE MOD(i, 3)
+          WHEN 0 THEN 'AB'
+          WHEN 1 THEN 'PE'
+          ELSE 'AP'
+        END AS STATUS,
+        100 + MOD(i - 1, 25) + 1 AS CODUSUR,
+        20000 + i AS NUMPED,
+        ROUND(10.5 + MOD(i, 28), 6) AS PTABELA,
+        200 + MOD(i - 1, 25) + 1 AS CODEPTO,
+        300 + MOD(i - 1, 25) + 1 AS CODSEC,
+        2000 + MOD(i - 1, 25) + 1 AS CODFORNEC,
+        MOD(i - 1, 3) + 1 AS CODPLPAG,
+        ROUND(7.1 + MOD(i, 26), 6) AS CUSTOFIN,
+        ROUND(7.1 + MOD(i, 26), 6) AS CUSTOCONT,
+        ROUND(7.1 + MOD(i, 26), 6) AS CUSTOREAL,
+        ROUND(7.9 + MOD(i, 28), 6) AS CUSTOREP
+      FROM dual
+    ) s
+    ON (t.NUMNOTA = s.NUMNOTA AND t.CODPROD = s.CODPROD AND t.CODOPER = s.CODOPER)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.DTMOV = s.DTMOV,
+        t.QT = s.QT,
+        t.PUNIT = s.PUNIT,
+        t.CODFILIAL = s.CODFILIAL,
+        t.STATUS = s.STATUS,
+        t.CODUSUR = s.CODUSUR,
+        t.NUMPED = s.NUMPED,
+        t.PTABELA = s.PTABELA,
+        t.CODEPTO = s.CODEPTO,
+        t.CODSEC = s.CODSEC,
+        t.CODFORNEC = s.CODFORNEC,
+        t.CODPLPAG = s.CODPLPAG,
+        t.CUSTOFIN = s.CUSTOFIN,
+        t.CUSTOCONT = s.CUSTOCONT,
+        t.CUSTOREAL = s.CUSTOREAL,
+        t.CUSTOREP = s.CUSTOREP
+    WHEN NOT MATCHED THEN
+      INSERT (
+        DTMOV, CODPROD, NUMNOTA, CODOPER, QT, PUNIT, CODFILIAL, STATUS, CODUSUR, NUMPED,
+        PTABELA, CODEPTO, CODSEC, CODFORNEC, CODPLPAG, CUSTOFIN, CUSTOCONT, CUSTOREAL, CUSTOREP
+      )
+      VALUES (
+        s.DTMOV, s.CODPROD, s.NUMNOTA, s.CODOPER, s.QT, s.PUNIT, s.CODFILIAL, s.STATUS, s.CODUSUR, s.NUMPED,
+        s.PTABELA, s.CODEPTO, s.CODSEC, s.CODFORNEC, s.CODPLPAG, s.CUSTOFIN, s.CUSTOCONT, s.CUSTOREAL, s.CUSTOREP
+      );
+  END LOOP;
+END;
+/
+
+BEGIN
+  FOR i IN 1..200 LOOP
+    MERGE INTO WINTHOR.PCMOV t
+    USING (
+      SELECT
+        DATE '2026-04-03' + MOD(i - 1, 20) AS DTMOV,
+        5000 + MOD(i - 1, 100) + 1 AS CODPROD,
+        35000 + i AS NUMNOTA,
+        'EN' AS CODOPER,
+        ROUND(2 + MOD(i, 15), 6) AS QT,
+        ROUND(8.2 + MOD(i, 36), 6) AS PUNIT,
+        CASE MOD(i, 5)
+          WHEN 1 THEN '11'
+          WHEN 2 THEN '12'
+          WHEN 3 THEN '13'
+          WHEN 4 THEN '14'
+          ELSE '15'
+        END AS CODFILIAL,
+        CASE MOD(i, 3)
+          WHEN 0 THEN 'AB'
+          WHEN 1 THEN 'PE'
+          ELSE 'AP'
+        END AS STATUS,
+        100 + MOD(i - 1, 25) + 1 AS CODUSUR,
+        ROUND(7.6 + MOD(i, 28), 6) AS CUSTOFIN,
+        20000 + i AS NUMPED,
+        ROUND(10.8 + MOD(i, 30), 6) AS PTABELA,
+        ROUND(7.6 + MOD(i, 28), 6) AS CUSTOCONT,
+        200 + MOD(i - 1, 25) + 1 AS CODEPTO,
+        300 + MOD(i - 1, 25) + 1 AS CODSEC,
+        2000 + MOD(i - 1, 25) + 1 AS CODFORNEC,
+        MOD(i - 1, 3) + 1 AS CODPLPAG,
+        ROUND(7.6 + MOD(i, 28), 6) AS CUSTOREAL,
+        ROUND(8.3 + MOD(i, 30), 6) AS CUSTOREP
+      FROM dual
+    ) s
+    ON (t.NUMNOTA = s.NUMNOTA AND t.CODPROD = s.CODPROD AND t.CODOPER = s.CODOPER)
+    WHEN MATCHED THEN
+      UPDATE SET
+        t.DTMOV = s.DTMOV,
+        t.QT = s.QT,
+        t.PUNIT = s.PUNIT,
+        t.CODFILIAL = s.CODFILIAL,
+        t.STATUS = s.STATUS,
+        t.CODUSUR = s.CODUSUR,
+        t.CUSTOFIN = s.CUSTOFIN,
+        t.NUMPED = s.NUMPED,
+        t.PTABELA = s.PTABELA,
+        t.CUSTOCONT = s.CUSTOCONT,
+        t.CODEPTO = s.CODEPTO,
+        t.CODSEC = s.CODSEC,
+        t.CODFORNEC = s.CODFORNEC,
+        t.CODPLPAG = s.CODPLPAG,
+        t.CUSTOREAL = s.CUSTOREAL,
+        t.CUSTOREP = s.CUSTOREP
+    WHEN NOT MATCHED THEN
+      INSERT (
+        DTMOV, CODPROD, NUMNOTA, CODOPER, QT, PUNIT, CODFILIAL, STATUS, CODUSUR, CUSTOFIN,
+        NUMPED, PTABELA, CUSTOCONT, CODEPTO, CODSEC, CODFORNEC, CODPLPAG, CUSTOREAL, CUSTOREP
+      )
+      VALUES (
+        s.DTMOV, s.CODPROD, s.NUMNOTA, s.CODOPER, s.QT, s.PUNIT, s.CODFILIAL, s.STATUS, s.CODUSUR, s.CUSTOFIN,
+        s.NUMPED, s.PTABELA, s.CUSTOCONT, s.CODEPTO, s.CODSEC, s.CODFORNEC, s.CODPLPAG, s.CUSTOREAL, s.CUSTOREP
+      );
+  END LOOP;
+END;
+/
