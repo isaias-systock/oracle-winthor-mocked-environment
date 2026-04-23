@@ -1,7 +1,3 @@
--- Seed isolada para cadastro de produtos.
--- Mantém a massa de 100 produtos e centraliza as tabelas:
--- PCPRODUT, PCEMBALAGEM, PCPRODFILIAL e PCPRODSIMIL.
-
 BEGIN
   FOR i IN 1..100 LOOP
     MERGE INTO WINTHOR.PCPRODUT t
@@ -27,7 +23,8 @@ BEGIN
           WHEN 2 THEN 'PC'
           ELSE 'FD'
         END AS EMBALAGEM,
-        ROUND(4.5 + (i * 0.83), 4) AS CUSTOREP
+        ROUND(4.5 + (i * 0.83), 4) AS CUSTOREP,
+        500000 + i AS CODAUXILIAR,
       FROM dual
     ) s
     ON (t.CODPROD = s.CODPROD)

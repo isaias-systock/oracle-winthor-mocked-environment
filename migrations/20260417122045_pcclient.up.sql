@@ -6,5 +6,6 @@ CREATE TABLE WINTHOR.PCCLIENT (
     BAIRRO VARCHAR2(50),                 -- Bairro
     CIDADE VARCHAR2(50),                 -- Cidade
     ESTADO CHAR(2),                      -- Estado
-    CEP VARCHAR2(10)                    -- CEP
+    CEP VARCHAR2(10),                    -- CEP
+	CODCOB VARCHAR2(4)                   -- Cobrança
 )

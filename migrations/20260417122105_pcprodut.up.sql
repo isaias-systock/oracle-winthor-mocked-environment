@@ -7,5 +7,6 @@ CREATE TABLE WINTHOR.PCPRODUT (
     PESOLIQ NUMBER(10,3),                -- Peso líquido
     QTUNITCX NUMBER(10,3),               -- Unidades por caixa
     EMBALAGEM VARCHAR2(20),              -- Tipo de embalagem
-    CUSTOREP NUMBER(10,4)               -- Custo de reposição
+    CUSTOREP NUMBER(10,4),               -- Custo de reposição
+    CODAUXILIAR NUMBER(20,0)             -- Código Auxiliar do produto
 )

@@ -288,7 +288,8 @@ BEGIN
           WHEN 3 THEN 'BA'
           ELSE 'GO'
         END AS ESTADO,
-        LPAD(15000000 + i, 8, '0') AS CEP
+        LPAD(15000000 + i, 8, '0') AS CEP,
+        ('C00' || i) AS CODCOB
       FROM dual
     ) s
     ON (t.CODCLI = s.CODCLI)
@@ -300,10 +301,11 @@ BEGIN
         t.BAIRRO = s.BAIRRO,
         t.CIDADE = s.CIDADE,
         t.ESTADO = s.ESTADO,
-        t.CEP = s.CEP
+        t.CEP = s.CEP,
+        t.CODCOB = s.CODCOB
     WHEN NOT MATCHED THEN
-      INSERT (CODCLI, CLIENTE, CGC, ENDERECO, BAIRRO, CIDADE, ESTADO, CEP)
-      VALUES (s.CODCLI, s.CLIENTE, s.CGC, s.ENDERECO, s.BAIRRO, s.CIDADE, s.ESTADO, s.CEP);
+      INSERT (CODCLI, CLIENTE, CGC, ENDERECO, BAIRRO, CIDADE, ESTADO, CEP, CODCOB)
+      VALUES (s.CODCLI, s.CLIENTE, s.CGC, s.ENDERECO, s.BAIRRO, s.CIDADE, s.ESTADO, s.CEP, s.CODCOB);
   END LOOP;
 END;
 /

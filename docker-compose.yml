@@ -1,0 +1,30 @@
+services:
+  oracle:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: oracle-free-dck
+    environment:
+      ORACLE_PWD: ${ORACLE_ADMIN_PASSWORD:-oracle}
+      ORACLE_CHARACTERSET: AL32UTF8
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+
+  go:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    environment:
+      ORACLE_HOST: oracle
+    volumes:
+      - .:/workspace
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    depends_on:
+      - oracle
+
+volumes:
+  oracle-data:
+  go-mod-cache:
+  go-build-cache:

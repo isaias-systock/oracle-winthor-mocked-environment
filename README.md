@@ -88,11 +88,11 @@ CLI principal para trabalhar com migrations.
 Comandos disponíveis:
 
 ```bash
-go run ./cmd/migrate create <nome>
-go run ./cmd/migrate create-seed <nome>
-go run ./cmd/migrate up
-go run ./cmd/migrate seed
-go run ./cmd/migrate down
+docker compose run --rm go run ./cmd/migrate create <nome>
+docker compose run --rm go run ./cmd/migrate create-seed <nome>
+docker compose run --rm go run ./cmd/migrate up
+docker compose run --rm go run ./cmd/migrate seed
+docker compose run --rm go run ./cmd/migrate down
 ```
 
 ### `cmd/testconn`
@@ -141,7 +141,6 @@ Material de apoio e documentação externa relacionada ao contexto Winthor. Não
 
 Antes de subir o ambiente, garanta:
 
-- `Go` instalado;
 - `Docker` e `Docker Compose` plugin instalados;
 - porta `1521` livre na máquina;
 - memória suficiente para rodar Oracle Free localmente;
@@ -149,7 +148,6 @@ Antes de subir o ambiente, garanta:
 
 Versões recomendadas:
 
-- Go 1.22 ou superior;
 - Docker Engine recente;
 - imagem Oracle Free compatível com `FREEPDB1`.
 
@@ -168,13 +166,15 @@ APP_ENV=local
 
 ORACLE_ADMIN_USER=system
 ORACLE_ADMIN_PASSWORD=oracle
-ORACLE_HOST=localhost
+ORACLE_HOST=oracle
 ORACLE_PORT=1521
 ORACLE_SERVICE=FREEPDB1
 
 ORACLE_APP_USER=WINTHOR
 ORACLE_APP_PASSWORD=Winthor123
 ```
+
+Se você for executar o Go fora do `docker compose`, ajuste `ORACLE_HOST` para `localhost`.
 
 ### Significado das variáveis
 
@@ -186,26 +186,42 @@ ORACLE_APP_PASSWORD=Winthor123
 - `ORACLE_APP_USER`: schema lógico da aplicação, hoje usado principalmente como referência ao schema `WINTHOR`.
 - `ORACLE_APP_PASSWORD`: senha do usuário `WINTHOR`.
 
-## Passo a passo para subir o ambiente
+## Passo a passo para subir o ambiente com Docker Compose
 
 1. Clonar o repositório
 
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/isaias-systock/oracle-winthor-mocked-environment.git
 cd oracle-winthor-mocked-environment
 ```
 
-2. Subir um container Oracle Free com Docker
-
-Se você ainda não tem Oracle rodando localmente, pode iniciar um container Oracle Database Free com:
+2. Criar e ajustar o `.env`
 
 ```bash
-docker run -d \
-  --name oracle-free \
-  -p 1521:1521 \
-  -e ORACLE_PWD=oracle \
-  -e ORACLE_CHARACTERSET=AL32UTF8 \
-  container-registry.oracle.com/database/free:latest
+cp .env.example .env
+```
+
+Por padrão, o exemplo já vem pronto para o fluxo via `docker compose`, usando `ORACLE_HOST=oracle`.
+
+Se você preferir rodar o binário Go direto na máquina, troque esse valor para `localhost`.
+
+3. Subir o Oracle Free e o runner Go
+
+O repositório agora inclui:
+
+- `Dockerfile`: imagem de desenvolvimento com o toolchain Go;
+- `docker-compose.yml`: stack com `oracle` e `go`.
+
+Suba o banco:
+
+```bash
+docker compose up -d oracle
+```
+
+Se quiser forçar o build da imagem do runner Go antes do primeiro uso:
+
+```bash
+docker compose build go
 ```
 
 Observações:
@@ -218,12 +234,12 @@ Observações:
 Para acompanhar a inicialização:
 
 ```bash
-docker logs -f oracle-free
+docker compose logs -f oracle
 ```
 
 Espere até o banco aceitar conexões antes de seguir.
 
-### 3. Validar acesso ao banco
+### 4. Validar acesso ao banco
 
 Confirme que o listener está ativo e que o usuário admin do `.env` bate com o container.
 
@@ -233,26 +249,20 @@ Neste projeto, o caso esperado é:
 - senha admin: a mesma definida em `ORACLE_PWD`
 - service: `FREEPDB1`
 
-### 4. Criar e ajustar o `.env`
+### 5. Baixar dependências Go no container
 
 ```bash
-cp .env.example .env
+docker compose run --rm go mod download
 ```
 
-Preencha com os valores corretos do seu banco local.
-
-### 5. Baixar dependências Go
-
-```bash
-go mod download
-```
+Isso baixa e reaproveita dependências usando os volumes `go-mod-cache` e `go-build-cache`, sem exigir Go instalado na máquina.
 
 ### 6. Testar a conectividade
 
 Você pode validar a conexão com o banco executando:
 
 ```bash
-go run ./cmd/testconn
+docker compose run --rm go run ./cmd/testconn
 ```
 
 Se o banco estiver acessível, o runner vai abrir a conexão admin e começar a aplicar as migrations.
@@ -262,7 +272,7 @@ Se preferir validar com um utilitário separado, revise `cmd/testconn`, mas o fl
 ### 7. Aplicar as migrations
 
 ```bash
-go run ./cmd/migrate up
+docker compose run --rm go run ./cmd/migrate up
 ```
 
 O runner executa os arquivos em ordem lexical, que neste projeto coincide com a ordem cronológica do timestamp.
@@ -280,7 +290,7 @@ Fluxo esperado:
 Para gerar uma nova migration:
 
 ```bash
-go run ./cmd/migrate create nome_da_migration
+docker compose run --rm go run ./cmd/migrate create nome_da_migration
 ```
 
 Isso cria:
@@ -293,13 +303,13 @@ migrations/<timestamp>_nome_da_migration.down.sql
 Para criar uma seed:
 
 ```bash
-go run ./cmd/migrate create-seed carga_inicial
+docker compose run --rm go run ./cmd/migrate create-seed dados_tabela_xpto
 ```
 
 Para executar apenas as seeds:
 
 ```bash
-go run ./cmd/migrate seed
+docker compose run --rm go run ./cmd/migrate seed
 ```
 
 ## Convenções das migrations
@@ -365,6 +375,16 @@ Isso normalmente indica:
 - restrição do ambiente onde o comando foi executado;
 - firewall ou permissão do Docker.
 
+### `dial tcp 127.0.0.1:1521: connect: connection refused` ao usar `docker compose run`
+
+Se isso acontecer no fluxo containerizado, quase sempre é sinal de `.env` com `ORACLE_HOST=localhost`.
+
+Dentro do serviço `go`, `localhost` aponta para o próprio container, não para o Oracle.
+
+Para o fluxo via Compose, use:
+
+- `ORACLE_HOST=oracle`
+
 ### Objetos já existentes
 
 Se você reaplicar o `up` em um banco parcialmente montado, algumas migrations podem falhar por objeto já existente.
@@ -376,25 +396,31 @@ O runner hoje tolera `ORA-00955` em alguns pontos do fluxo stateless, mas não s
 Subir migrations:
 
 ```bash
-go run ./cmd/migrate up
+docker compose run --rm go run ./cmd/migrate up
 ```
 
 Gerar migration:
 
 ```bash
-go run ./cmd/migrate create adicionar_tabela_x
+docker compose run --rm go run ./cmd/migrate create adicionar_tabela_x
 ```
 
 Gerar seed:
 
 ```bash
-go run ./cmd/migrate create-seed carga_inicial
+docker compose run --rm go run ./cmd/migrate create-seed carga_inicial
+```
+
+Testar conectividade:
+
+```bash
+docker compose run --rm go run ./cmd/testconn
 ```
 
 Rollback da última migration registrada:
 
 ```bash
-go run ./cmd/migrate down
+docker compose run --rm go run ./cmd/migrate down
 ```
 
 ## Próximos ajustes recomendados
@@ -403,6 +429,7 @@ Se este repositório continuar evoluindo, os próximos passos mais úteis são:
 
 - remover código morto do fluxo antigo de versionamento;
 - alinhar `down` com o novo modelo stateless;
-- adicionar `docker-compose.yml` para o Oracle Free;
 - documentar um SQL inicial opcional para criar `WINTHOR.MIGRATIONS`, se o rollback continuar dependendo dela;
 - tornar migrations de bootstrap totalmente idempotentes.
+- adicionar os demais indices, constraints etc faltantes.
+- adicionar as demais tabelas, colunas e schemas faltantes.
