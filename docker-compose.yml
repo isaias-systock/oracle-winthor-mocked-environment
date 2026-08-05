@@ -24,6 +24,19 @@ services:
     depends_on:
       - oracle
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    command: ["run", "./cmd/api"]
+    ports:
+      - "1522:1522"
+    volumes:
+      - .:/workspace
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
 volumes:
   oracle-data:
   go-mod-cache:

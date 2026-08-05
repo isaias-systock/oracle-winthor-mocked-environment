@@ -18,6 +18,68 @@ Na prática, ele centraliza:
 - conexão com Oracle via Go usando `go-ora`;
 - configuração do ambiente por `.env`.
 
+## API mock do Winthor
+
+O serviço HTTP mock fica disponível na porta `1522`; o Oracle continua usando a porta `1521`.
+
+Para iniciar a API:
+
+```bash
+docker compose up --build -d api
+```
+
+Nesta primeira versão, os endpoints não exigem autenticação e não acessam o Oracle.
+
+### Login
+
+`POST /winthor/autenticacao/v1/login`
+
+Gera um token aleatório a cada requisição:
+
+```bash
+curl -X POST http://localhost:1522/winthor/autenticacao/v1/login
+```
+
+Resposta:
+
+```json
+{"accessToken":"token-aleatorio"}
+```
+
+### Importar venda
+
+`POST /winthor/venda/v0/importar-venda?ignoraProcessamento=false`
+
+O corpo precisa ser um JSON válido. O parâmetro `ignoraProcessamento` é aceito, mas ignorado pelo mock.
+
+```bash
+curl -X POST \
+  'http://localhost:1522/winthor/venda/v0/importar-venda?ignoraProcessamento=false' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "numPedRca": 7001,
+    "codCli": 1,
+    "codUsur": 1,
+    "items": []
+  }'
+```
+
+Resposta:
+
+```json
+{
+  "message": "Pedidos gerados com sucesso!",
+  "data": {
+    "numPedRca": 7001,
+    "codCli": 1,
+    "codUsur": 1,
+    "items": []
+  }
+}
+```
+
+JSON inválido retorna `400`; métodos diferentes de `POST` retornam `405`.
+
 Hoje, o fluxo foi simplificado para um modelo pragmático:
 
 - o comando `up` lê os arquivos `.sql` em ordem de nome;
@@ -64,7 +126,7 @@ Importante:
 ```text
 .
 ├── cmd/
-│   ├── app/
+│   ├── api/
 │   ├── migrate/
 │   └── testconn/
 ├── internal/
